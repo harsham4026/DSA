@@ -1,7 +1,6 @@
 def binary_search(arr, element_to_find, starting_index, last_index):
     if last_index >= 1:
-        mid_index = int(
-            (starting_index + last_index + 1) / 2)  # to get the length of the array and take the middle element of it
+        mid_index = int((starting_index + last_index) / 2)
         if element_to_find > arr[mid_index]:
             return binary_search(arr, element_to_find, mid_index + 1, last_index)
         elif element_to_find < arr[mid_index]:
