@@ -1,3 +1,8 @@
+"""Time complexity is O(logn). Number of steps it might take to find the element is n*(1/2)^k = 1
+n/2^k = 1,
+n = 2^k
+k = logn"""
+
 def binary_search(arr, element_to_find, starting_index, last_index):
     if last_index >= 1:
         mid_index = int((starting_index + last_index) / 2)
