@@ -7,7 +7,6 @@ def jump_search(arr, element_to_find):
     low = 0
     jump_interval = int(math.sqrt(len(arr)))
     for i in range(0, len(arr), jump_interval):
-        print(i)
         if arr[i] < element_to_find:
             low = i
         elif arr[i] == element_to_find:
