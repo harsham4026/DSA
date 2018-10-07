@@ -1,3 +1,5 @@
+"""Time complexity is O(n) in worst case and O(1) in best case."""
+
 def linear_search(arr, search_element):
     for i in range(len(arr)):
         if arr[i] == search_element:
