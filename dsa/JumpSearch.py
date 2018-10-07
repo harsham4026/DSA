@@ -1,4 +1,4 @@
-"""Time complexity of jump searech algo is O(sqrt(n))"""
+"""Time complexity of jump search algo is O(sqrt(n))"""
 
 import math
 
