@@ -8,11 +8,10 @@ def is_balanced(expression):
     for let in expression:
         if let in opening:
             queue.append(mapping[let])
-            print(queue)
         elif let in closing:
-            if not queue or let != queue.pop():
+            if len(queue) == 0 or let != queue.pop():
                 return False
-    return not queue
+    return len(queue) == 0
 
 if __name__ == '__main__':
     balanced_state = is_balanced('{{{}}}')
