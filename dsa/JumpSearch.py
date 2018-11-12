@@ -13,11 +13,11 @@ def jump_search(arr, element_to_find):
             return i
         else:
             break
-    c = low
+    #c = low
     for i in arr[low:]:
         if i == element_to_find:
-            return c
-        c += 1
+            return low
+        low += 1
     return -1
 
 
