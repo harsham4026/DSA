@@ -1,3 +1,6 @@
+Athena Tables Creation DDL:
+---------------------------->
+
 create external table grab_test.supply_demand_ratio_streaming(
   geo_hash string,
   supply_demand_ratio double)
@@ -8,17 +11,116 @@ location 's3://grab-test-data/supply_demand_ratio';
 create external table grab_test.users_data_batch(
   geo_hash string,
   count int,
-  time_stamp timestamp
+  time_stamp double
   )
 stored as parquet
 location 's3://grab-test-data/user_data';
 
 
-
 create external table grab_test.driver_data_batch(
   geo_hash string,
   count int,
-  time_stamp timestamp
+  time_stamp double
   )
 stored as parquet
 location 's3://grab-test-data/driver_data';
+
+
+create external table grab_test.weather_data_streaming(
+  geo_hash string,
+  temparature double,
+  precipitation double
+  )
+stored as parquet
+location 's3://grab-test-data/weather_data_streaming';
+
+
+create external table grab_test.weather_data_batch(
+  geo_hash string,
+  temparature double,
+  precipitation double,
+  time_stamp double
+  )
+stored as parquet
+location 's3://grab-test-data/weather_data';
+
+
+
+create external table grab_test.traffic_congestion_rating_streaming(
+  geo_hash string,
+  traffic_congestion double
+  )
+stored as parquet
+location 's3://grab-test-data/congestion_data_streaming';
+
+
+create external table grab_test.traffic_congestion_rating_batch(
+  geo_hash string,
+  traffic_congestion double,
+  time_stamp double
+  )
+stored as parquet
+location 's3://grab-test-data/congestion_data_batch';
+
+
+Tableau Queries to Athena:
+---------------------------->
+1) For streaming query the grab_test.supply_demand_ratio_streaming directly and display it on tableau dashboard.
+
+select sd.geo_hash, sd.supply_demand_ratio, congestion.traffic_congestion
+from grab_test.supply_demand_ratio_streaming sd
+join grab_test.traffic_congestion_rating_streaming congestion
+on sd.geo_hash = congestion.geo_hash;
+
+Available geo hashes:
+----------------------
+dr5r81
+dr5r8q
+dr5r82
+dr5r8r
+dr5r83
+dr5r84
+dr5r8m
+dr5r8n
+dr5r80
+dr5r8p
+dr5r85
+dr5r2p
+dr5r86
+dr5r87
+dr5r2r
+dr5r8j
+dr5r8k
+dr5rb0
+dr5r8h
+dr5rb2
+
+2) For showing the data for batch processing take the input parameters of starting time in yyyy-MM-dd and ending time in yyyy-MM-dd and the geohash from user
+
+
+
+select driver_data.geo_hash, driver_data.count as supply, user_data.count as demand, weather_data.temparature, weather_data.precipitation, congestion.traffic_congestion
+from grab_test.driver_data_batch driver_data
+join grab_test.users_data_batch user_data
+on driver_data.geo_hash = user_data.geo_hash
+and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') = date_format(from_unixtime(user_data.time_stamp),'%Y-%m-%d')
+join grab_test.weather_data_batch weather_data
+on driver_data.geo_hash = weather_data.geo_hash
+and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') = date_format(from_unixtime(weather_data.time_stamp),'%Y-%m-%d')
+join grab_test.traffic_congestion_rating_batch congestion
+on driver_data.geo_hash = congestion.geo_hash
+and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') = date_format(from_unixtime(congestion.time_stamp),'%Y-%m-%d')
+where driver_data.geo_hash='geo_hash'
+and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') <= format_datetime(date_parse(starting_time_from_user_param, '%Y-%m-%d'), 'Y-m-d')
+and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') >= format_datetime(date_parse(ending_time_from_user_param, '%Y-%m-%d'), 'Y-m-d');
+
+#having doubt whether to filter based on time from grab_test.users_data_batch table and grab_test.weather_data_batch
+
+#SELECT date_parse(ts,'%Y%m%dT%h%i%s') FROM timestamptestcsv3
+#select driver_data.geo_hash, driver_data.count as supply, user_data.count as demand, weather_data.temparature, weather_data.precipitation
+#from grab_test.driver_data_batch driver_data
+#join grab_test.users_data_batch user_data
+#on driver_data.geo_hash = user_data.geo_hash
+#join grab_test.weather_data_batch weather_data
+#on driver_data.geo_hash = weather_data.geo_hash
+#where ;
