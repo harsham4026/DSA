@@ -1,0 +1,24 @@
+create external table grab_test.supply_demand_ratio_streaming(
+  geo_hash string,
+  supply_demand_ratio double)
+stored as parquet
+location 's3://grab-test-data/supply_demand_ratio';
+
+
+create external table grab_test.users_data_batch(
+  geo_hash string,
+  count int,
+  time_stamp timestamp
+  )
+stored as parquet
+location 's3://grab-test-data/user_data';
+
+
+
+create external table grab_test.driver_data_batch(
+  geo_hash string,
+  count int,
+  time_stamp timestamp
+  )
+stored as parquet
+location 's3://grab-test-data/driver_data';

@@ -1,0 +1,77 @@
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StringType
+import csv
+from pyspark.sql import functions as F
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName('supply-to-demand-app').getOrCreate()
+
+reader = csv.reader(open('/Users/hmandadi/Downloads/taxi_zones_2.csv', 'r'))
+lat_long_dict = {}
+for row in reader:
+  lat_long_dict[row[2]] = {'lat': row[1], 'long' : row[0]}
+
+# broadcast the lat_long_dict to make it available in every executor
+
+lat_long_dict = spark.sparkContext.broadcast(lat_long_dict)
+
+get_lat_for_location_id = udf(lambda x: lat_long_dict.value[x]['lat'], StringType())
+get_long_for_location_id = udf(lambda x: lat_long_dict.value[x]['long'], StringType())
+calcualte_the_geohash_udf = udf(lambda x, y: Geohash.encode(float(x), float(y)), StringType())
+
+
+# Subscribe to supplyTopic
+supply_data_stream_df = spark \
+  .readStream \
+  .format("kafka") \
+  .option("kafka.bootstrap.servers", "host1:port1") \
+  .option("subscribe", "supplyTopic") \
+  .load()
+
+#put the grouping of supply query here
+supply_data_stream_df_with_geo_hash = supply_data_stream_df.select("PULocationID").withColumn("lat", get_lat_for_location_id("PULocationID")).withColumn("long", get_long_for_location_id("PULocationID")).drop("PULocationID").withColumn("geo_hash", calcualte_the_geohash_udf("lat", "long")).groupBy("geo_hash").agg(F.count("geo_hash").alias("geo_hash_supply_count"))
+
+#supply_data_stream_df.writeStream.format("parquet").option("path", "/somePath")
+
+# ProcessingTime trigger with ten-minutes micro-batch interval
+supply_data_stream_df_with_geo_hash.writeStream \
+.format("parquet") \
+.option("path","/user/hive/warehouse/tx_stream/") \
+.option("checkpointLocation","/checkpoint_path") \
+.trigger(processingTime='10 minutes') \
+.outputMode("append") \
+.start() \
+.awaitTermination()
+
+# Subscribe to DemandTopic
+demand_data_stream_df = spark \
+  .readStream \
+  .format("kafka") \
+  .option("kafka.bootstrap.servers", "host1:port1") \
+  .option("subscribe", "DemandTopic") \
+  .load()
+
+demand_data_stream_df_with_geo_hash = demand_data_stream_df.select("PULocationID").withColumn("lat", get_lat_for_location_id("PULocationID")).withColumn("long", get_long_for_location_id("PULocationID")).drop("PULocationID").withColumn("geo_hash", calcualte_the_geohash_udf("lat", "long")).groupBy("geo_hash").agg(F.count("geo_hash").alias("geo_hash_demand_count"))
+
+# ProcessingTime trigger with ten-minutes micro-batch interval
+demand_data_stream_df_with_geo_hash.writeStream \
+.format("parquet") \
+.option("path","/user/hive/warehouse/tx_stream/") \
+.option("checkpointLocation","/checkpoint_path") \
+.trigger(processingTime='10 minutes') \
+.outputMode("append") \
+.start() \
+.awaitTermination()
+
+
+supply_to_demand_ratio_stream_df = supply_data_stream_df_with_geo_hash.join(demand_data_stream_df_with_geo_hash, supply_data_stream_df_with_geo_hash.geo_hash == demand_data_stream_df_with_geo_hash.geo_hash).select(supply_data_df.geo_hash, supply_data_df.geo_hash_supply_count/demand_data_df.geo_hash_demand_count)
+
+# ProcessingTime trigger with ten-minutes micro-batch interval
+supply_to_demand_ratio_stream_df.writeStream \
+.format("parquet") \
+.option("path","/user/hive/warehouse/tx_stream/") \
+.option("checkpointLocation","/checkpoint_path") \
+.trigger(processingTime='10 minutes') \
+.outputMode("append") \
+.start() \
+.awaitTermination()

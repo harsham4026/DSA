@@ -1,0 +1,35 @@
+from pyspark.sql import functions as F
+df = spark .readStream.format("kafka").option("kafka.bootstrap.servers", "13.233.134.2:9092").option("startingOffsets", "earliest").option("subscribe", "user").load()
+#df.select(F.col("value").cast("string")).writeStream.format("console").option("truncate", False).trigger(processingTime='1 seconds').start()
+
+df3 = df.select(F.col("value").cast("string"))
+split_col = F.split(df3['value'], ',')
+df4 = df3.withColumn("lat", split_col.getItem(0)).withColumn("long", split_col.getItem(1)).withColumn("timestamp", split_col.getItem(2)).select("lat", "long", "timestamp").writeStream.format("console").option("truncate", False).trigger(processingTime='1 seconds').start()
+
+
+df2 = df.selectExpr("cast(value as string)").writeStream.outputMode("append").format("parquet").option("checkpointLocation", "/home/hadoop/intermediate_user_requests_checkpoint/").trigger(processingTime="1 seconds").start("/home/hadoop/intermediate_user_requests/")
+
+
+
+df.select(F.col("key").cast("string"), F.col("value").cast("string"), F.col("timestamp")).writeStream \
+.format("parquet") \
+.option("path","/home/hadoop/intermediate_user_requests/") \
+.option("checkpointLocation","/home/hadoop/intermediate_user_requests_checkpoint") \
+.trigger(processingTime='1 seconds') \
+.outputMode("append") \
+.start() \
+.awaitTermination()
+
+
+df.select(F.col("value").cast("string")).writeStream.format("parquet").option("path", "/home/hadoop/intermediate_user_requests/")
+.option("checkpointLocation", "/home/hadoop/intermediate_user_requests_checkpoint/").start()
+
+
+
+import org.apache.spark.sql.streaming.Trigger
+import scala.concurrent.duration._
+
+#trying with scala
+val df = spark .readStream.format("kafka").option("kafka.bootstrap.servers", "13.233.134.2:9092").option("startingOffsets", "earliest").option("subscribe", "user").load()
+
+val query = df.selectExpr("cast(value as string)").writeStream.outputMode("append").format("parquet").option("checkpointLocation", "/home/hadoop/intermediate_user_requests_checkpoint/").trigger(Trigger.ProcessingTime("1 seconds")).start("s3a://grab-test-data/fromPySpark/")
