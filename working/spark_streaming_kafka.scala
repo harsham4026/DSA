@@ -15,6 +15,13 @@ import org.apache.spark.sql.types._
 val spark = SparkSession.builder.master("yarn").appName("grab taxi data").getOrCreate()
 
 spark.conf.set("spark.sql.crossJoin.enabled", true)
+spark.conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+spark.conf.set("spark.broadcast.compress", "true")
+spark.conf.set("spark.shuffle.compress", "true")
+spark.conf.set("spark.shuffle.spill.compress", "true")
+spark.conf.set("spark.io.compression.codec","org.apache.spark.io.LZ4CompressionCodec")
+spark.conf.set("spark.sql.inMemoryColumnarStorage.compressed", "true")
+spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 52428800)
 
 val zonesSchema = StructType(Array(
         StructField("geohash", StringType, true),
@@ -24,9 +31,9 @@ val zonesSchema = StructType(Array(
         StructField("maxLong", DoubleType, true)))
 
 val zoneDf = spark.read.format("csv").option("header", "true").option("mode", "DROPMALFORMED").schema(zonesSchema).load("s3a://grab-test-data/taxi_with_zones.csv")
+zoneDf.persist()
 
-
-val speedThreshold= 50.0
+val speedThreshold= 30.0
 def twoPointsOnSameSide(x1 : Double, y1 : Double, x2 : Double, y2 : Double, px : Double, py : Double, qx : Double, qy : Double) : Boolean =  {
         var m =0.0;
         if (x1 == x2) {
@@ -166,14 +173,16 @@ tripsDataStream.foreachRDD { rdd=>
     val tripDF = spark.createDataFrame(rdd).toDF("pickLat", "pickLong", "dropLat","dropLong","speed")
     val congDF = tripDF.join(zoneDf).withColumn("congest",calculateCongestion(
     col("pickLat"),col("pickLong"),col("dropLat"),col("dropLong"),col("minLat"),col("minLong"), col("maxLat"),col("maxLong"),col("speed")))
-    val finalDF = congDF.groupBy(col("geohash")).agg(sum(col("congest")))
+    val finalDF = congDF.groupBy(col("geohash")).agg(sum(col("congest")).alias("congest"))
+    finalDF.write.format("parquet").mode("overwrite").save("s3a://grab-test-data/congestion_data_streaming/")
+    finalDF.write.format("parquet").mode("append").save("s3a://grab-test-data/congestion_data_batch/")
     finalDF.show()
 }
 
 streamedDataWeather.foreachRDD { rdd=>
 import spark.implicits._
 val weatherStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "temparature", "precipitation")
-weatherStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("overwrite").save("s3a://grab-test-data/weather_data_streaming/")
+weatherStreamDataFrame.select(col("geo_hash"), col("temparature").cast("double"), col("precipitation").cast("double")).withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("overwrite").save("s3a://grab-test-data/weather_data_streaming/")
 weatherStreamDataFrame.show()
 }
 
@@ -194,7 +203,7 @@ driverStreamDataFrame.show()
 streamedDataWeather.foreachRDD { rdd=>
 import spark.implicits._
 val weatherStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "temparature", "precipitation")
-weatherStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/weather_data_batch/")
+weatherStreamDataFrame.select(col("geo_hash"), col("temparature").cast("double"), col("precipitation").cast("double")).withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/weather_data_batch/")
 weatherStreamDataFrame.show()
 }
 
