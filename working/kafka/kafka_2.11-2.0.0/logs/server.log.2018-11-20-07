@@ -1,0 +1,1 @@
+[2018-11-20 07:24:17,547] INFO Got user-level KeeperException when processing sessionid:0x100021e9c050001 type:setData cxid:0xa8 zxid:0xf1 txntype:-1 reqpath:n/a Error Path:/config/topics/weather Error:KeeperErrorCode = NoNode for /config/topics/weather (org.apache.zookeeper.server.PrepRequestProcessor)
