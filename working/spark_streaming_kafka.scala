@@ -62,55 +62,47 @@ val weatherStream = KafkaUtils.createDirectStream[String, String](
 )
 
 val streamedDataUser = userStream.map(record => record.value).map(record => record.split(",")).map(record => (GeoHash.geoHashStringWithCharacterPrecision(record(0).toDouble, record(1).toDouble, 6), 1) )
-
-val streamedDataDriver = driverStream.map(record => record.value).map(record => record.split(",")).map(record => (GeoHash.geoHashStringWithCharacterPrecision(record(0).toDouble, record(1).toDouble, 6), 1) )
-
-//val streamedDataWeather = weatherStream.map(record => record.value).map(record => record.split(",")).map(record => (record(0), record(1) ))
-
 val uw = streamedDataUser.reduceByKeyAndWindow((a:Int, b:Int) => (a + b), Seconds(120), Seconds(120))
 
+val streamedDataDriver = driverStream.map(record => record.value).map(record => record.split(",")).map(record => (GeoHash.geoHashStringWithCharacterPrecision(record(0).toDouble, record(1).toDouble, 6), 1) )
 val dw = streamedDataDriver.reduceByKeyAndWindow((a:Int, b:Int) => (a + b), Seconds(120), Seconds(120))
 
+val streamedDataWeather = weatherStream.map(record => record.value).map(record => record.split(",")).map(record => (record(0), record(1), record(2) )).window(Seconds(10), Seconds(10))
+
 val supplyDemandStream = dw.join(uw).map(x => (x._1, x._2._1.toDouble/x._2._2.toDouble)).foreachRDD { rdd=>
-          import spark.implicits._
-          val supplyDemandDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "supply_demand_ratio")
-          supplyDemandDataFrame.write.format("parquet").mode("overwrite").save("s3a://grab-test-data/supply_demand_ratio/")
-          supplyDemandDataFrame.show()
-        }
+import spark.implicits._
+val supplyDemandDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "supply_demand_ratio")
+supplyDemandDataFrame.write.format("parquet").mode("overwrite").save("s3a://grab-test-data/supply_demand_ratio/")
+supplyDemandDataFrame.show()
+}
+
+streamedDataWeather.foreachRDD { rdd=>
+import spark.implicits._
+val weatherStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "temparature", "precipitation")
+weatherStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("overwrite").save("s3a://grab-test-data/weather_data_streaming/")
+weatherStreamDataFrame.show()
+}
 
 uw.foreachRDD { rdd=>
-      import spark.implicits._
-      val wordsDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "count")
-      wordsDataFrame.withColumn("time_stamp", lit(current_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/user_data/")
-      wordsDataFrame.show()
-    }
+import spark.implicits._
+val userStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "count")
+userStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/user_data/")
+userStreamDataFrame.show()
+}
+
 dw.foreachRDD { rdd=>
-          import spark.implicits._
-          val wordsDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "count")
-          wordsDataFrame.withColumn("time_stamp", lit(current_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/driver_data/")
-          wordsDataFrame.show()
-        }
+import spark.implicits._
+val driverStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "count")
+driverStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/driver_data/")
+driverStreamDataFrame.show()
+}
+
+streamedDataWeather.foreachRDD { rdd=>
+import spark.implicits._
+val weatherStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "temparature", "precipitation")
+weatherStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/weather_data_batch/")
+weatherStreamDataFrame.show()
+}
 
 ssc.start()
 ssc.awaitTermination()
-
-
-
-
-
-
-
-scala> val rdd = sc.parallelize(Array("1,2,3", "4,5,6", "7,8,9", "10,11,12")).map(_.split(",")).map(x => (x(0), x(1) ))
-rdd: org.apache.spark.rdd.RDD[(String, String)] = MapPartitionsRDD[18] at map at <console>:24
-
-scala> val rdd1 = sc.parallelize(Array("1,2,3", "4,5,6", "7,8,9", "10,11,12")).map(_.split(",")).map(x => (x(0), x(1) ))
-rdd1: org.apache.spark.rdd.RDD[(String, String)] = MapPartitionsRDD[21] at map at <console>:24
-
-scala> val rdd2 = sc.parallelize(Array("1,2,3", "4,5,6", "7,8,9", "10,11,12")).map(_.split(",")).map(x => (x(0), x(1) ))
-rdd2: org.apache.spark.rdd.RDD[(String, String)] = MapPartitionsRDD[24] at map at <console>:24
-
-scala> rdd.join(rdd1).join(rdd2)
-res1: org.apache.spark.rdd.RDD[(String, ((String, String), String))] = MapPartitionsRDD[30] at join at <console>:30
-
-scala> rdd.join(rdd1).join(rdd2).map(x => (x._1, x._2._1._1, x._2._1._2, x._2._2)).take(1)
-res6: Array[(String, String, String, String)] = Array((1,2,2,2))

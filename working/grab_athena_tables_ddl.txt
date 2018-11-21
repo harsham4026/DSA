@@ -42,7 +42,7 @@ create external table grab_test.weather_data_batch(
   time_stamp double
   )
 stored as parquet
-location 's3://grab-test-data/weather_data';
+location 's3://grab-test-data/weather_data_batch';
 
 
 
@@ -71,6 +71,8 @@ select sd.geo_hash, sd.supply_demand_ratio, congestion.traffic_congestion
 from grab_test.supply_demand_ratio_streaming sd
 join grab_test.traffic_congestion_rating_streaming congestion
 on sd.geo_hash = congestion.geo_hash;
+
+#yet to see whether to join the weather streaming dataset
 
 Available geo hashes:
 ----------------------
@@ -115,6 +117,22 @@ and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') <= format_date
 and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') >= format_datetime(date_parse(ending_time_from_user_param, '%Y-%m-%d'), 'Y-m-d');
 
 #having doubt whether to filter based on time from grab_test.users_data_batch table and grab_test.weather_data_batch
+
+
+
+
+#from grab_test.driver_data_batch driver_data
+#join grab_test.users_data_batch user_data
+#and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') = date_format(from_unixtime(user_data.time_stamp),'%Y-%m-%d')
+#join grab_test.weather_data_batch weather_data
+#on driver_data.geo_hash = weather_data.geo_hash
+#and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') = date_format(from_unixtime(weather_data.time_stamp),'%Y-%m-%d')
+#join grab_test.traffic_congestion_rating_batch congestion
+#on driver_data.geo_hash = congestion.geo_hash
+#and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') = date_format(from_unixtime(congestion.time_stamp),'%Y-%m-%d')
+#where driver_data.geo_hash='geo_hash'
+#and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') <= format_datetime(date_parse('2018-09-08', '%Y-%m-%d'), 'Y-m-d')
+#and date_format(from_unixtime(driver_data.time_stamp),'%Y-%m-%d') >= format_datetime(date_parse('2018-09-01', '%Y-%m-%d'), 'Y-m-d');
 
 #SELECT date_parse(ts,'%Y%m%dT%h%i%s') FROM timestamptestcsv3
 #select driver_data.geo_hash, driver_data.count as supply, user_data.count as demand, weather_data.temparature, weather_data.precipitation
