@@ -8,69 +8,75 @@ stored as parquet
 location 's3://grab-test-data/supply_demand_ratio';
 
 
-create external table grab_test.users_data_batch(
-  geo_hash string,
-  count int,
-  time_stamp double
-  )
+CREATE EXTERNAL TABLE `users_data_batch`(
+  `geo_hash` string,
+  `count` int,
+  `time_stamp` int)
 stored as parquet
-location 's3://grab-test-data/user_data';
+LOCATION
+  's3://grab-test-data/user_data';
 
 
-create external table grab_test.driver_data_batch(
-  geo_hash string,
-  count int,
-  time_stamp double
-  )
+  CREATE EXTERNAL TABLE `driver_data_batch`(
+    `geo_hash` string,
+    `count` int,
+    `time_stamp` int)
+  stored as parquet
+  LOCATION
+    's3://grab-test-data/driver_data'
+
+
+    CREATE EXTERNAL TABLE `weather_data_streaming`(
+      `geo_hash` string,
+      `temparature` double,
+      `precipitation` double)
 stored as parquet
-location 's3://grab-test-data/driver_data';
+LOCATION
+  's3://grab-test-data/weather_data_streaming'
 
 
-create external table grab_test.weather_data_streaming(
-  geo_hash string,
-  temparature double,
-  precipitation double
-  )
-stored as parquet
-location 's3://grab-test-data/weather_data_streaming';
-
-
-create external table grab_test.weather_data_batch(
-  geo_hash string,
-  temparature double,
-  precipitation double,
-  time_stamp double
-  )
-stored as parquet
-location 's3://grab-test-data/weather_data_batch';
+CREATE EXTERNAL TABLE `weather_data_batch`(
+  `geo_hash` string,
+  `temparature` double,
+  `precipitation` double,
+  `time_stamp` int)
+  stored as parquet
+  LOCATION
+  's3://grab-test-data/weather_data_batch'
 
 
 
-create external table grab_test.traffic_congestion_rating_streaming(
-  geo_hash string,
-  traffic_congestion double
-  )
-stored as parquet
-location 's3://grab-test-data/congestion_data_streaming';
+  CREATE EXTERNAL TABLE `traffic_congestion_rating_streaming`(
+    `geohash` string,
+    `congest` int)
+   stored as parquet
+   location 's3://grab-test-data/congestion_data_streaming/'
 
 
-create external table grab_test.traffic_congestion_rating_batch(
-  geo_hash string,
-  traffic_congestion double,
-  time_stamp double
-  )
-stored as parquet
-location 's3://grab-test-data/congestion_data_batch';
+CREATE EXTERNAL TABLE `traffic_congestion_rating_batch`(
+  `geohash` string,
+  `congest` int,
+  `time_stamp` int)
+  stored as parquet
+  LOCATION
+  's3://grab-test-data/congestion_data_batch'
+
+
+  create external table hourly_data_aggregation(
+  geo_hash string, time_stamp string, congest int, temparature double, precipitation double, demandCount int, supplyCount int)
+  stored as parquet
+  location 's3://grab-test-data/hourly_data_aggregation'
 
 
 Tableau Queries to Athena:
 ---------------------------->
 1) For streaming query the grab_test.supply_demand_ratio_streaming directly and display it on tableau dashboard.
 
-select sd.geo_hash, sd.supply_demand_ratio, congestion.traffic_congestion
-from grab_test.supply_demand_ratio_streaming sd
-join grab_test.traffic_congestion_rating_streaming congestion
-on sd.geo_hash = congestion.geo_hash;
+select congestion.geohash, case when sd.supply_demand_ratio is not null then sd.supply_demand_ratio else 0.0 END as supply_demand_ratio,
+congestion.congest
+from  grab_test.traffic_congestion_rating_streaming congestion
+left outer join grab_test.supply_demand_ratio_streaming sd
+on congestion.geohash = sd.geo_hash;
 
 #yet to see whether to join the weather streaming dataset
 
