@@ -172,16 +172,16 @@ supplyDemandDataFrame.write.format("parquet").mode("overwrite").save("s3a://grab
 supplyDemandDataFrame.show()
 }
 
-tripsDataStream.foreachRDD { rdd=>
+val congestionDataStream = tripsDataStream.foreachRDD { rdd=>
     import spark.implicits._
     val currentDate = dateFormatter.format(new Date())
     val tripDF = spark.createDataFrame(rdd).toDF("pickLat", "pickLong", "dropLat","dropLong","speed")
     val congDF = tripDF.join(zoneDf).withColumn("congest",calculateCongestion(
     col("pickLat"),col("pickLong"),col("dropLat"),col("dropLong"),col("minLat"),col("minLong"), col("maxLat"),col("maxLong"),col("speed")))
-    val finalDF = congDF.groupBy(col("geohash")).agg(sum(col("congest")).alias("congest"))
+    val finalDF = congDF.groupBy(col("geohash")).agg(sum(col("congest")).alias("congest")).select(col("geohash").cast("string"), col("congest").cast("int"))
+    finalDF.show()
     finalDF.write.format("parquet").mode("overwrite").save("s3a://grab-test-data/congestion_data_streaming/")
     finalDF.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/congestion_data_batch/"+ currentDate + "/")
-    finalDF.show()
 }
 
 streamedDataWeather.foreachRDD { rdd=>
