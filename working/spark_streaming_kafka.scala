@@ -180,7 +180,7 @@ tripsDataStream.foreachRDD { rdd=>
     col("pickLat"),col("pickLong"),col("dropLat"),col("dropLong"),col("minLat"),col("minLong"), col("maxLat"),col("maxLong"),col("speed")))
     val finalDF = congDF.groupBy(col("geohash")).agg(sum(col("congest")).alias("congest"))
     finalDF.write.format("parquet").mode("overwrite").save("s3a://grab-test-data/congestion_data_streaming/")
-    finalDF.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/congestion_data_batch_"+ currentDate + "/")
+    finalDF.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/congestion_data_batch/"+ currentDate + "/")
     finalDF.show()
 }
 
@@ -195,7 +195,7 @@ uw.foreachRDD { rdd=>
 import spark.implicits._
 val currentDate = dateFormatter.format(new Date())
 val userStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "count")
-userStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/user_data_"+ currentDate + "/")
+userStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/user_data/"+ currentDate + "/")
 userStreamDataFrame.show()
 }
 
@@ -203,7 +203,7 @@ dw.foreachRDD { rdd=>
 import spark.implicits._
 val currentDate = dateFormatter.format(new Date())
 val driverStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "count")
-driverStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/driver_data_"+ currentDate + "/")
+driverStreamDataFrame.withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/driver_data/"+ currentDate + "/")
 driverStreamDataFrame.show()
 }
 
@@ -211,10 +211,9 @@ streamedDataWeather.foreachRDD { rdd=>
 import spark.implicits._
 val currentDate = dateFormatter.format(new Date())
 val weatherStreamDataFrame = spark.createDataFrame(rdd).toDF("geo_hash", "temparature", "precipitation")
-weatherStreamDataFrame.select(col("geo_hash"), col("temparature").cast("double"), col("precipitation").cast("double")).withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/weather_data_batch_"+ currentDate + "/")
+weatherStreamDataFrame.select(col("geo_hash"), col("temparature").cast("double"), col("precipitation").cast("double")).withColumn("time_stamp", lit(unix_timestamp())).write.format("parquet").mode("append").save("s3a://grab-test-data/weather_data_batch/"+ currentDate + "/")
 weatherStreamDataFrame.show()
 }
 
 ssc.start()
 ssc.awaitTermination()
-
