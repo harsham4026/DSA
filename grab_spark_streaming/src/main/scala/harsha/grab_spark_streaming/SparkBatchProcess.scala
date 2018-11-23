@@ -10,28 +10,31 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+import org.apache.spark.SparkFiles
+
 
 object SparkBatchProcess {
 
-  var datesList = new ArrayList[String]
-  val dateFormatter = new SimpleDateFormat("yyyy_MM_dd")
-  var currentDate = dateFormatter.format(new Date())
-  //val currentDate = dateFormatter.format(new Date())
-  //DATE=`date +%Y_%m_%d`
-  var dataOfDaysToHold = 5
+  private val datesList = new ArrayList[String]
+  private val dateFormatter = new SimpleDateFormat("yyyy_MM_dd")
+  private var currentDate = dateFormatter.format(new Date())
+  private var dataOfDaysToHold = 5
+
+  val propsFilePath = "hdfs:///grab_data_processing.properties"
 
   def main(args: Array[String]): Unit = {
     val props = new Properties()
 
     currentDate = args(0)
-    props.load(new FileInputStream(args(1)))
 
-    dataOfDaysToHold = (props.getProperty("days.of.data.tohold", "5")).toInt
-    var fsScheme = props.getProperty("fs.scheme", "s3://grab-test-data")
+    //var fsScheme = props.getProperty("fs.scheme", "s3://grab-test-data")
 
     val spark = SparkSession.builder.appName("grab taxi data batch job aggregation").getOrCreate()
     val conf = new Configuration()
-    val fs = FileSystem.get(new URI(fsScheme), conf)
+    val fs = FileSystem.get(new URI("s3://grab-test-data"), conf)
+
+    props.load(fs.open(new Path(args(1))))
+    dataOfDaysToHold = (props.getProperty("days.of.data.tohold", "5")).toInt
 
     val weatherBatchData = props.getProperty("weather.batch.data", "s3a://grab-test-data/weather_data_batch/")
     val driverBatchData = props.getProperty("driver.batch.data", "s3a://grab-test-data/driver_data/")
@@ -84,13 +87,11 @@ object SparkBatchProcess {
 
   def deleteTheFoldersOlderThanThreshold(fileStatus: Array[FileStatus], fs: FileSystem): Unit = {
     for (status <- fileStatus) {
-      if (datesList.contains(status.getPath().toString().split("/")(4))) {
+      if (datesList.contains(status.getPath().getName())) {
       }
       else {
-        //status.getPath.getName
         fs.delete(status.getPath(), true)
       }
     }
   }
-
 }

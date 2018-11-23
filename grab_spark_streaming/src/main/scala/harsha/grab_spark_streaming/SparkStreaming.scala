@@ -1,10 +1,13 @@
 package harsha.grab_spark_streaming
 
 import java.io.FileInputStream
+import java.net.URI
 import java.text._
 import java.util.{Date, Properties}
 
 import ch.hsr.geohash.GeoHash
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -16,12 +19,16 @@ import org.apache.spark.streaming.kafka010._
 
 object SparkStreaming {
 
-  val props = new Properties()
+  private val props = new Properties()
 
   def main(args: Array[String]) {
     val spark = SparkSession.builder.appName("grab taxi data streaming job").getOrCreate()
+    val conf = new Configuration()
+    val fs = FileSystem.get(new URI("s3://grab-test-data"), conf)
 
-    props.load(new FileInputStream(args(0)))
+    props.load(fs.open(new Path(args(0))))
+
+    //PropertiesConstants.loadTheProperties(props)
 
     val bootStrapServer = props.getProperty("bootstrap.server", "13.233.134.2:9092")
 
