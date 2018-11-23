@@ -12,17 +12,20 @@ import org.apache.spark.sql.functions._
 
 object SparkBatchProcess {
 
-  var datesList = new java.util.ArrayList[String]
+  var datesList = new ArrayList[String]
   val fsScheme = "s3://grab-test-data"
-  val spark = SparkSession.builder.master("yarn").appName("grab taxi data day aggregation").getOrCreate()
+  val spark = SparkSession.builder.appName("grab taxi data day aggregation").getOrCreate()
   val conf = new Configuration();
   val fs = FileSystem.get(new URI("s3://grab-test-data"), conf)
   val dateFormatter = new SimpleDateFormat("yyyy_MM_dd")
-  val currentDate = dateFormatter.format(new Date())
+  var currentDate = dateFormatter.format(new Date())
+  //val currentDate = dateFormatter.format(new Date())
+  //DATE=`date +%Y_%m_%d`
   val dataOfDaysToHold = 5
 
   def main(args: Array[String]): Unit = {
 
+    currentDate = args(0)
 
     val weatherData = spark.read.parquet("s3a://grab-test-data/weather_data_batch/" + currentDate + "/").select(col("geo_hash"), col("temparature"), col("precipitation"), from_unixtime(col("time_stamp"), "yyyy-MM-dd HH").as("time_stamp")).groupBy("geo_hash", "time_stamp").agg(sum("temparature").as("temparature"), sum("precipitation").as("precipitation"))
 
@@ -67,6 +70,7 @@ object SparkBatchProcess {
       if (datesList.contains(status.getPath().toString().split("/")(4))) {
       }
       else {
+        //status.getPath.getName
         fs.delete(status.getPath(), true)
       }
     }
