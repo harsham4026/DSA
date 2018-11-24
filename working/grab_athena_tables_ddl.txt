@@ -111,6 +111,11 @@ where date_parse(time_stamp, '%Y-%m-%d %h') <= date_parse('2018-11-22 7', '%Y-%m
 and date_parse(time_stamp, '%Y-%m-%d %h') >= date_parse('2018-11-22 7', '%Y-%m-%d %h')
 and geo_hash='dr5r2r';
 
+select geo_hash, time_stamp, congest, temparature, precipitation, demandcount,  supplycount
+from grab_test.hourly_data_aggregation
+where cast(date_parse(time_stamp, '%Y-%m-%d %k') as date) <= cast(date_parse('2018-11-23', '%Y-%m-%d') as date)
+and cast(date_parse(time_stamp, '%Y-%m-%d %k') as date) >= cast(date_parse('2018-11-22', '%Y-%m-%d') as date)
+and geo_hash='dr5r2r'
 
 
 select driver_data.geo_hash, driver_data.count as supply, user_data.count as demand, weather_data.temparature, weather_data.precipitation, congestion.traffic_congestion
