@@ -1,3 +1,7 @@
+'''starts printing the spiral order of a binary tree from right to left at level 1. And at level 2 left to right, at level 3
+right to left and so on. For switching the printing order we use flag variable. If flag is true then print in left to right 
+order else right to left'''
+
 class Node:
     def __init__(self, data):
         self.data = data
