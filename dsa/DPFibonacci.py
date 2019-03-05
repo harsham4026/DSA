@@ -1,38 +1,37 @@
-def intersection_of_arrays(arr1, arr2, m, n):
-    result_array = []
-    i = j = 0
-    while i < m and j < n:
-        if arr1[i] < arr2[j]:
-            i += 1
-        elif arr2[j] < arr1[i]:
-            j += 1
-        else:
-            result_array.append(arr2[j])
-            i += 1
-            j += 1
-    return result_array
+def fib(n, arr) :
 
+    if arr[n] is not None :
+        return arr[n]
 
-def dict_approach(arr1, arr2, m, n):
-    common_list = []
-    dict = {}
+    if n == 1 or n == 2 :
+        result = 1
+    elif n<= 0:
+        return 0
+    else:
+        result =  fib(n - 1, arr) + fib(n - 2, arr)
 
-    for i in range(m):
-        if arr1[i] in dict:
-            dict[arr1[i]] = dict[arr1[i]] + 1
-        else:
-            dict[arr1[i]] = 1
+    arr[n] = result
 
-    for i in range(n):
-        if arr2[i] in dict and dict[arr2[i]] > 0:
-            common_list.append(arr2[i])
-            dict[arr2[i]] = dict[arr2[i]] - 1
+    return result
 
-    return common_list
+def fib_optimized(n) :
+
+    a = 1
+    b = 1
+    if n <= 0 :
+        return "invalid"
+    elif n == 1 or n == 2 :
+        return 1
+    else:
+        for i in range(3, n + 1) :
+            c = a + b
+            a = b
+            b = c
+        return b
 
 
 if __name__ == '__main__':
-    arr1 = [1, 2, 1, 1, 3]
-    arr2 = [1, 1, 1, 2]
-    print(intersection_of_arrays(arr1, arr2, len(arr1), len(arr2)))
-    print(dict_approach(arr1, arr2, len(arr1), len(arr2)))
+    fib_number_of_given_num = 3
+    arr = [None] * (fib_number_of_given_num + 1)
+    print(fib(fib_number_of_given_num, arr))
+    print(fib_optimized(fib_number_of_given_num))
