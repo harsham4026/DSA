@@ -18,12 +18,14 @@ def segregate_zeros_and_ones(arr):
 def segragate_zeros_to_left_(arr):
     count = 0
     for i in range(0, len(arr)):
-        if arr[i] == 1:
+        if arr[i] != 0:
             arr[i] = 0
             count += 1
 
     print(count)
-    for i in range(count-1, len(arr)):
+    print(len(arr))
+    print(len(arr) - count)
+    for i in range(len(arr) - count, len(arr)):
         arr[i] = 1
 
     return arr
@@ -50,9 +52,9 @@ def segragate_zeros_to_left(arr) :
 
 
 if __name__ == '__main__':
-    arr = [0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0]
+    arr = [0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1]
     print(segregate_zeros_and_ones(arr))
     print(segragate_zeros_to_left_(arr))
 
-    arr2 = [1, 2, 0, 4, 5, 0, 6, 0, 0, 0]
+    # arr2 = [1, 2, 0, 4, 5, 0, 6, 0, 0, 0]
     # print(segragate_zeros_to_left(arr2))
