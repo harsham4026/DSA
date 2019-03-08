@@ -81,11 +81,12 @@ def max_value_in_the_tree(root):
     lres = max_value_in_the_tree(root.left)
     rres = max_value_in_the_tree(root.right)
 
-    if lres > res:
-        res = lres
-    if rres > res:
-        res = rres
-    return res
+    # if lres > res:
+    #     res = lres
+    # if rres > res:
+    #     res = rres
+    # return res
+    return max(lres, rres, res)
 
 
 def find_max(root):
@@ -148,16 +149,18 @@ insert(r, Node(70))
 insert(r, Node(60))
 insert(r, Node(80))
 
-print_the_tree_inorder(r)
-print_the_tree_preorder(r)
-print_the_tree_postorder(r)
+if __name__ == '__main__':
+    print_the_tree_inorder(r)
+    print_the_tree_preorder(r)
+    print_the_tree_postorder(r)
 
-print("height if the tree : " + str(max_depth_of_a_bst(r)))
+    print("height of the tree : " + str(max_depth_of_a_bst(r)))
+    print("diameter of the tree : " + str(max_depth_of_a_bst(r)))
 
-print(max_value_in_the_tree(r))
+    print(max_value_in_the_tree(r))
 
-print(find_max(r))
-print(find_min(r))
+    print(find_max(r))
+    print(find_min(r))
 
-print("BFS Tree")
-breadth_first_search_or_level_order_tree_traversal(r)
+    print("BFS Tree")
+    breadth_first_search_or_level_order_tree_traversal(r)
