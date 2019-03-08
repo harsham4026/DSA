@@ -56,8 +56,9 @@ def print_at_given_level(root, level):
 
 def breadth_first_search_or_level_order_tree_traversal(root):
     height = max_depth_of_a_bst(root)
-    for i in range(1, height+1):
+    for i in range(1, height + 1):
         print_at_given_level(root, i)
+
 
 def max_depth_of_a_bst(root):
     if root is None:
@@ -141,6 +142,27 @@ def delete_the_node(root, key):
         return root
 
 
+def get_width_at_given_level(root, level):
+    if root is None:
+        return 0
+    elif level == 1:
+        return 1
+    elif level > 1:
+        return get_width_at_given_level(root.left, level - 1) + get_width_at_given_level(root.right, level - 1)
+
+
+def get_width_of_binary_tree(root):
+    height = max_depth_of_a_bst(root)
+    max_width = 0
+
+    for i in range(1, height + 1):
+        width = get_width_at_given_level(root, i)
+        if width > max_width:
+            max_width = width
+
+    return max_width
+
+
 r = Node(50)
 insert(r, Node(30))
 insert(r, Node(20))
@@ -164,3 +186,5 @@ if __name__ == '__main__':
 
     print("BFS Tree")
     breadth_first_search_or_level_order_tree_traversal(r)
+
+    print("width of binary tree : {}".format(str(get_width_of_binary_tree(r))))
