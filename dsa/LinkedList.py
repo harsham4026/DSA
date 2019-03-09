@@ -29,6 +29,14 @@ class SLinkedList():
 
         return slow.data
 
+    def findMid(self):
+        slow = fast = self.head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+
+        return slow.data
+
     def prepend(self, data):
         new_node = Node(data)
         if self.head is None:
@@ -235,3 +243,5 @@ if __name__ == '__main__':
 
     llist6 = SLinkedList()
     merged_linked_list = llist6.merge_sorted_linked_lists(llist4.head, llist5.head)
+
+    print("middle : {}".format(str(llist5.findMid())))
