@@ -14,8 +14,9 @@ def height_of_tree(root):
 
     return max(lheight, rheight) + 1
 
-def get_width_of_a_level(root, level) :
-    if root is None :
+
+def get_width_of_a_level(root, level):
+    if root is None:
         return 0
     elif level == 1:
         return 1
@@ -29,9 +30,50 @@ def max_width_of_tree(root):
 
     for i in range(1, height + 1):
         width = get_width_of_a_level(root, i)
-        if width > max_width :
+        if width > max_width:
             max_width = width
     return max_width
+
+
+# A function to do inorder tree traversal
+def printInorder(root):
+    if root:
+        # First recur on left child
+        printInorder(root.left)
+
+        # then print the data of node
+        print(root.data),
+
+        # now recur on right child
+        printInorder(root.right)
+
+    # A function to do postorder tree traversal
+
+
+def printPostorder(root):
+    if root:
+        # First recur on left child
+        printPostorder(root.left)
+
+        # the recur on right child
+        printPostorder(root.right)
+
+        # now print the data of node
+        print(root.val),
+
+    # A function to do preorder tree traversal
+
+
+def printPreorder(root):
+    if root:
+        # First print the data of node
+        print(root.val),
+
+        # Then recur on left child
+        printPreorder(root.left)
+
+        # Finally recur on right child
+        printPreorder(root.right)
 
 
 root = Node(1)
@@ -44,3 +86,5 @@ root.right.left = Node(5)
 
 if __name__ == '__main__':
     print("max width of the given binary tree is : {}".format(str(max_width_of_tree(root))))
+    print(root.data)
+    printInorder(root)
