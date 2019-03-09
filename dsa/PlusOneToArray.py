@@ -1,6 +1,13 @@
 def add_one(arr):
     length = len(arr)
     for i in range(length - 1, -1, -1):
+        print(i)
+        if arr[i] < 9:
+            arr[i] += 1
+            return arr
+        # print(i)
+        arr[i] = 0
+
         # if the last element is not 9 then add 1 to it and return the array
         if arr[i] < 9:
             arr[i] += 1
