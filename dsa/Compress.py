@@ -29,3 +29,7 @@ if __name__ == '__main__':
     string = 'asdasdssss'
     print(compress(string))
     print(compress_2(string))
+
+    geek = {1}
+    geek.add(1)
+    print(geek)
