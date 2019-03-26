@@ -24,9 +24,8 @@ def dict_approach(arr1, arr2, m, n):
             dict[arr1[i]] = 1
 
     for i in range(n):
-        if arr2[i] in dict and dict[arr2[i]] > 0:
+        if arr2[i] in dict:
             common_list.append(arr2[i])
-            dict[arr2[i]] = dict[arr2[i]] - 1
 
     return common_list
 
