@@ -23,7 +23,6 @@ class Graph():
                 if visited[i] == False:
                     visited[i] = True
                     queue.append(i)
-                    visited[i] = True
 
 
 graph = Graph()
