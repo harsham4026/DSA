@@ -35,17 +35,19 @@ def least_common_ancestor(root, a, b):
             root = root.right
 
 
-def lca(root, n1, n2, root_data):
+def lca(root, n1, n2):
+    # root_data = root.data
     if root is None:
         return None
     elif root.left is None and root.right is None:
         return "one of the element doesn't exist in tree"
     elif n1 < root.data and n2 < root.data:
-        return lca(root.left, n1, n2, root_data)
+        return lca(root.left, n1, n2)
     elif n1 > root.data and n2 > root.data:
-        return lca(root.right, n1, n2, root_data)
+        return lca(root.right, n1, n2)
 
-    return None if root_data == root.data else root.data
+    # return None if root_data == root.data else root.data
+    return root.data
 
 
 def printPreorder(root):
@@ -76,6 +78,6 @@ insert(root, Node(4))
     #      4
 if __name__ == '__main__':
     print(least_common_ancestor(root, 1, 51))
-    print(lca(root, 1, 51, root.data))
-    print(lca(root, 3, 4, root.data))
+    print(lca(root, 3, 5))
+    print(lca(root, 3, 51))
     # printPreorder(root)
