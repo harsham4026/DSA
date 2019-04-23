@@ -35,20 +35,39 @@ def least_common_ancestor(root, a, b):
             root = root.right
 
 
-def lca(root, n1, n2):
-    # root_data = root.data
+def lca(root, n1, n2, root_data):
     if root is None:
         return None
     elif root.left is None and root.right is None:
         return "one of the element doesn't exist in tree"
     elif n1 < root.data and n2 < root.data:
-        return lca(root.left, n1, n2)
+        return lca(root.left, n1, n2, root_data)
     elif n1 > root.data and n2 > root.data:
-        return lca(root.right, n1, n2)
+        return lca(root.right, n1, n2, root_data)
 
-    # return None if root_data == root.data else root.data
-    return root.data
+    return None if root_data == root.data else root.data
 
+def bstElementPresenceUtil(root, var1):
+    if root is None:
+        return False
+    elif root.data == var1:
+        return True
+    elif root.data < var1:
+        return bstElementPresenceUtil(root.right, var1)
+    else:
+        return bstElementPresenceUtil(root.left, var1)
+
+def find_lca(root, elem1, elem2, n1, n2):
+    if elem1 & elem2:
+        if root is None:
+            return None
+        elif n1 < root.data and n2 < root.data:
+            return find_lca(root.left, elem1, elem2, n1, n2)
+        elif n2 > root.data and n2 < root.data:
+            return find_lca(root.right, elem1, elem2, n1, n2)
+        return root.data
+    else:
+        print("one or more element(s) doesn't exist in bst")
 
 def printPreorder(root):
     if root:
@@ -77,7 +96,16 @@ insert(root, Node(4))
     #     \
     #      4
 if __name__ == '__main__':
-    print(least_common_ancestor(root, 1, 51))
-    print(lca(root, 3, 5))
-    print(lca(root, 3, 51))
-    # printPreorder(root)
+    # print(least_common_ancestor(root, 1, 51))
+    # print(lca(root, 1, 51, root.data))
+    # print(lca(root, 3, 51, root.data))
+    # # printPreorder(root)
+
+    ##working solution
+    n1 = 3
+    n2 = 57
+    elem1 = bstElementPresenceUtil(root, n1)
+    elem2 = bstElementPresenceUtil(root, n2)
+    print(find_lca(root, elem1, elem2, n1, n2))
+
+
