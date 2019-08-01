@@ -38,14 +38,12 @@ def least_common_ancestor(root, a, b):
 def lca(root, n1, n2, root_data):
     if root is None:
         return None
-    elif root.left is None and root.right is None:
-        return "one of the element doesn't exist in tree"
     elif n1 < root.data and n2 < root.data:
         return lca(root.left, n1, n2, root_data)
     elif n1 > root.data and n2 > root.data:
         return lca(root.right, n1, n2, root_data)
 
-    return None if root_data == root.data else root.data
+    return root.data
 
 def bstElementPresenceUtil(root, var1):
     if root is None:
